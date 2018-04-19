@@ -9,6 +9,8 @@ visdom = "*"
 matplotlib = "*"
 "fbd4f6c" = {file = "http://download.pytorch.org/whl/cu91/torch-0.3.1-cp36-cp36m-linux_x86_64.whl "}
 torchvision = "*"
+ipython = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.6"

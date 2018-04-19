@@ -38,7 +38,7 @@ class ToLabel:
 
 class Colorize:
 
-    def __init__(self, n=22):
+    def __init__(self, n=151):
         self.cmap = colormap(256)
         self.cmap[n] = self.cmap[-1]
         self.cmap = torch.from_numpy(self.cmap[:n])
