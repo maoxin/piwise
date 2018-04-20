@@ -55,7 +55,8 @@ def train(args, model):
     else:
         criterion = CrossEntropyLoss2d(weight)
 
-    optimizer = Adam(model.parameters(), 1e-4)
+    # optimizer = Adam(model.parameters(), 1e-4)
+    optimizer = Adam(model.parameters(), 1e-5)
     if args.model.startswith('FCN'):
         optimizer = SGD(model.parameters(), 1e-4, .9, 2e-5)
     if args.model.startswith('PSP'):
@@ -121,7 +122,7 @@ def train(args, model):
                 print(f'loss: {average} (epoch: {epoch}, step: {step})')
 
             if args.steps_save > 0 and step % args.steps_save == 0:
-                filename = os.path.join(args.savedir, f'{args.model}-{epoch:03}-{step:04}.pth')
+                filename = os.path.join(args.savedir, f'{args.model}-{epoch:03}-{step:05}.pth')
                 torch.save(model.state_dict(), filename)
                 print(f'save: {filename} (epoch: {epoch}, step: {step})')
 
@@ -195,7 +196,7 @@ if __name__ == '__main__':
     parser_train.add_argument('--datadir', required=True)
     parser_train.add_argument('--num-epochs', type=int, default=32)
     parser_train.add_argument('--num-workers', type=int, default=4)
-    parser_train.add_argument('--batch-size', type=int, default=4)
+    parser_train.add_argument('--batch-size', type=int, default=1)
     parser_train.add_argument('--steps-loss', type=int, default=500)
     parser_train.add_argument('--steps-plot', type=int, default=0)
     parser_train.add_argument('--steps-save', type=int, default=500)

@@ -41,25 +41,26 @@ class ADE(Dataset):
         with open(image_path(self.labels_root, filename, '.png'), 'rb') as f:
             label = load_image(f).convert('P')
 
-        # short_size = int(np.random.choice([300, 375, 450, 525, 600]))
-        short_size = int(np.random.choice([256]))
+        # short_size = int(np.random.choice([304, 384, 464, 528]))
 
-        # image = self.resize(image, short_size)
+        # image = self.resize_img(image, short_size)
+        # image = self.resize_img(image) # only when batch_size=1
         image = CenterCrop(256)(image)
         image = ColorJitter(brightness=0.5)(image)
 
-        # label = self.resize(label, short_size)
+        # label = self.resize_label(label, short_size)
+        # label = self.resize_label(label)
         label = CenterCrop(256)(label)
 
         if_lr = np.random.choice([False, True])
         if_td = np.random.choice([False, True])
 
         # if if_lr:
-            # image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            # label = label.transpose(Image.FLIP_LEFT_RIGHT)
+        #     image = image.transpose(Image.FLIP_LEFT_RIGHT)
+        #     label = label.transpose(Image.FLIP_LEFT_RIGHT)
         # if if_td:
-            # image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            # label = label.transpose(Image.FLIP_TOP_BOTTOM)
+        #     image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        #     label = label.transpose(Image.FLIP_TOP_BOTTOM)
 
         image = ToTensor()(image)
         label = ToLabel()(label)
@@ -72,12 +73,43 @@ class ADE(Dataset):
     def __len__(self):
         return len(self.filenames)
 
-    def resize(self, img, short_size):
-        img = Resize(short_size)(img)
+    def resize_img(self, img, short_size=None):
+        if short_size:
+            if img.height < img.width:
+                target_height0 = short_size
+                target_width0 = int(short_size / target_height0 * img.width)
+            else:
+                target_width0 = short_size
+                target_height0 = int(short_size / target_width0 * img.height)
+            img = Resize((target_height0, target_width0))(img)
         
         target_height = self.round2nearest_multiple(img.height)
         target_width = self.round2nearest_multiple(img.width)
-        img = Resize((target_height, target_width))(img)
+
+        if (max([target_height, target_width]) <= 784):
+            img = Resize((target_height, target_width))(img)
+        else:
+            img = CenterCrop(528)(img)
+
+        return img
+
+    def resize_label(self, img, short_size=None):
+        if short_size:
+            if img.height < img.width:
+                target_height0 = short_size
+                target_width0 = int(short_size / target_height0 * img.width)
+            else:
+                target_width0 = short_size
+                target_height0 = int(short_size / target_width0 * img.height)
+            img = Resize((target_height0, target_width0), interpolation=Image.NEAREST)(img)
+        
+        target_height = self.round2nearest_multiple(img.height)
+        target_width = self.round2nearest_multiple(img.width)
+
+        if (max([target_height, target_width]) <= 784):
+            img = Resize((target_height, target_width), interpolation=Image.NEAREST)(img)
+        else:
+            img = CenterCrop(528)(img)
 
         return img
 
