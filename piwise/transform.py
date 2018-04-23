@@ -55,3 +55,23 @@ class Colorize:
             color_image[2][mask] = self.cmap[label][2]
 
         return color_image
+
+class Colorize2:
+
+    def __init__(self, n=151):
+        self.cmap = colormap(256)
+        self.cmap[n] = self.cmap[-1]
+        self.cmap = torch.from_numpy(self.cmap[:n])
+
+    def __call__(self, gray_image):
+        size = gray_image.size()
+        color_image = torch.ByteTensor(3, size[1], size[2]).fill_(0)
+
+        for label in range(1, len(self.cmap)):
+            mask = gray_image[0] == (label - 1)
+
+            color_image[0][mask] = self.cmap[label][0]
+            color_image[1][mask] = self.cmap[label][1]
+            color_image[2][mask] = self.cmap[label][2]
+
+        return color_image

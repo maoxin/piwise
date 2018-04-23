@@ -5,9 +5,11 @@ from PIL import Image
 
 from torch.utils.data import Dataset
 
-from torchvision.transforms import Resize, ColorJitter, CenterCrop
+from torchvision.transforms import Resize, ColorJitter, CenterCrop, RandomCrop, Normalize, RandomHorizontalFlip
 from torchvision.transforms import ToTensor
 from piwise.transform import ToLabel
+
+import random
 
 EXTENSIONS = ['.jpg', '.png']
 
@@ -41,77 +43,62 @@ class ADE(Dataset):
         with open(image_path(self.labels_root, filename, '.png'), 'rb') as f:
             label = load_image(f).convert('P')
 
-        # short_size = int(np.random.choice([304, 384, 464, 528]))
-
-        # image = self.resize_img(image, short_size)
-        # image = self.resize_img(image) # only when batch_size=1
-        image = CenterCrop(256)(image)
+        
+        image = Resize((256, 256))(image)
         image = ColorJitter(brightness=0.5)(image)
+        
+        label = Resize((256, 256), Image.NEAREST)(label)
 
-        # label = self.resize_label(label, short_size)
-        # label = self.resize_label(label)
-        label = CenterCrop(256)(label)
+        seed = np.random.randint(2147483647)
+        random.seed(seed)
+        image = RandomHorizontalFlip()(image)
+        random.seed(seed)
+        label = RandomHorizontalFlip()(label)
+        
 
-        if_lr = np.random.choice([False, True])
-        if_td = np.random.choice([False, True])
+        # if_lr = np.random.choice([False, True])
 
         # if if_lr:
-        #     image = image.transpose(Image.FLIP_LEFT_RIGHT)
-        #     label = label.transpose(Image.FLIP_LEFT_RIGHT)
-        # if if_td:
-        #     image = image.transpose(Image.FLIP_TOP_BOTTOM)
-        #     label = label.transpose(Image.FLIP_TOP_BOTTOM)
+            # image = image.transpose(Image.FLIP_LEFT_RIGHT)
+            # label = label.transpose(Image.FLIP_LEFT_RIGHT)
 
         image = ToTensor()(image)
+        image = Normalize([.485, .456, .406], [.229, .224, .225])(image)
         label = ToLabel()(label)
-
-        # print('image', image.size())
-        # print('label', label.size())
 
         return image, label
 
     def __len__(self):
         return len(self.filenames)
 
-    def resize_img(self, img, short_size=None):
-        if short_size:
-            if img.height < img.width:
-                target_height0 = short_size
-                target_width0 = int(short_size / target_height0 * img.width)
-            else:
-                target_width0 = short_size
-                target_height0 = int(short_size / target_width0 * img.height)
-            img = Resize((target_height0, target_width0))(img)
+
+class ADE_Val(Dataset):
+
+    def __init__(self, root):
+        self.images_root = os.path.join(root, 'img_val')
+        self.labels_root = os.path.join(root, 'lbl_val')
+
+        self.filenames = [image_basename(f)
+            for f in os.listdir(self.labels_root) if is_image(f)]
+        self.filenames.sort()
+
+    def __getitem__(self, index):
+        filename = self.filenames[index]
+
+        with open(image_path(self.images_root, filename, '.jpg'), 'rb') as f:
+            image = load_image(f).convert('RGB')
+        with open(image_path(self.labels_root, filename, '.png'), 'rb') as f:
+            label = load_image(f).convert('P')
+
         
-        target_height = self.round2nearest_multiple(img.height)
-        target_width = self.round2nearest_multiple(img.width)
+        image = Resize((256, 256))(image)
+        label = Resize((256, 256), Image.NEAREST)(label)
 
-        if (max([target_height, target_width]) <= 784):
-            img = Resize((target_height, target_width))(img)
-        else:
-            img = CenterCrop(528)(img)
+        image = ToTensor()(image)
+        image = Normalize([.485, .456, .406], [.229, .224, .225])(image)
+        label = ToLabel()(label)
 
-        return img
+        return image, label
 
-    def resize_label(self, img, short_size=None):
-        if short_size:
-            if img.height < img.width:
-                target_height0 = short_size
-                target_width0 = int(short_size / target_height0 * img.width)
-            else:
-                target_width0 = short_size
-                target_height0 = int(short_size / target_width0 * img.height)
-            img = Resize((target_height0, target_width0), interpolation=Image.NEAREST)(img)
-        
-        target_height = self.round2nearest_multiple(img.height)
-        target_width = self.round2nearest_multiple(img.width)
-
-        if (max([target_height, target_width]) <= 784):
-            img = Resize((target_height, target_width), interpolation=Image.NEAREST)(img)
-        else:
-            img = CenterCrop(528)(img)
-
-        return img
-
-    def round2nearest_multiple(self, x, p=16):
-        return ((x - 1) // p + 1) * p
+    def __len__(self):
+        return len(self.filenames)

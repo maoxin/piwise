@@ -118,11 +118,14 @@ class UNetEnc(nn.Module):
         super().__init__()
 
         self.up = nn.Sequential(
-            nn.Conv2d(in_channels, features, 3, padding=1),
+            nn.Conv2d(in_channels, features, 3),
+            nn.BatchNorm2d(features),
             nn.ReLU(inplace=True),
-            nn.Conv2d(features, features, 3, padding=1),
+            nn.Conv2d(features, features, 3),
+            nn.BatchNorm2d(features),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(features, out_channels, 2, stride=2),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
 
@@ -136,9 +139,11 @@ class UNetDec(nn.Module):
         super().__init__()
 
         layers = [
-            nn.Conv2d(in_channels, out_channels, 3, padding=1),
+            nn.Conv2d(in_channels, out_channels, 3),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, 3, padding=1),
+            nn.Conv2d(out_channels, out_channels, 3),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
         ]
         if dropout:
@@ -161,24 +166,29 @@ class UNet(nn.Module):
         self.dec3 = UNetDec(128, 256)
         self.dec4 = UNetDec(256, 512, dropout=True)
         self.center = nn.Sequential(
-            nn.Conv2d(512, 1024, 3, padding=1),
+            nn.Conv2d(512, 1024, 3),
+            nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, 3, padding=1),
+            nn.Conv2d(1024, 1024, 3),
+            nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True),
             nn.Dropout(),
             nn.ConvTranspose2d(1024, 512, 2, stride=2),
+            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
         )
         self.enc4 = UNetEnc(1024, 512, 256)
         self.enc3 = UNetEnc(512, 256, 128)
         self.enc2 = UNetEnc(256, 128, 64)
         self.enc1 = nn.Sequential(
-            nn.Conv2d(128, 64, 3, padding=1),
+            nn.Conv2d(128, 64, 3),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 3, padding=1),
+            nn.Conv2d(64, 64, 3),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
         )
-        self.final = nn.Conv2d(64, num_classes, 1, padding=1)
+        self.final = nn.Conv2d(64, num_classes, 1)
 
     def forward(self, x):
         dec1 = self.dec1(x)

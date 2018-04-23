@@ -9,12 +9,11 @@ class Dashboard:
     def __init__(self, port):
         self.vis = Visdom(port=port)
 
-    def loss(self, losses, title, env):
+    def loss(self, losses, title='loss_over_epoch'):
         x = np.arange(1, len(losses)+1, 1)
         losses = np.array(losses)
 
-        # self.vis.line(np.array(losses), x, env='loss', opts=dict(title=title), win=title)
-        self.vis.line(losses, x, env=f'loss_{env}', opts=dict(title=title), win=title)
+        self.vis.line(losses, x, env='loss_all_epoch', opts=dict(title=title), win=title)
 
     def image(self, image, title, env):
         if image.is_cuda:
@@ -23,5 +22,10 @@ class Dashboard:
             image = image.data
         image = image.numpy()
 
-        # self.vis.image(image, env='images', opts=dict(title=title))
         self.vis.image(image, env=f'images_{env}', opts=dict(title=title))
+
+    def score(self, scores, title='IoU_over_epoch'):
+        x = np.arange(1, len(scores)+1, 1)
+        scores = np.array(scores)
+
+        self.vis.line(scores, x, env='scores_all_epoch', opts=dict(title=title), win=title)
