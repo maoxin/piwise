@@ -12,6 +12,7 @@ class runningScore(object):
         hist = np.bincount(
             n_class * label_true[mask].astype(int) +
             label_pred[mask], minlength=n_class**2).reshape(n_class, n_class)
+        # 乘以 n_class 是为了对应hist中的行，label_pred[mask]则是一个在对应行移动的过程
         return hist
 
     def update(self, label_trues, label_preds):

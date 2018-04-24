@@ -22,7 +22,7 @@ class Dashboard:
             image = image.data
         image = image.numpy()
 
-        self.vis.image(image, env=f'images_{env}', opts=dict(title=title))
+        self.vis.image(image, env=f'images_{env}', opts=dict(title=title), win=title)
 
     def score(self, scores, title='IoU_over_epoch'):
         x = np.arange(1, len(scores)+1, 1)

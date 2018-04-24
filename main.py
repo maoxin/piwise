@@ -154,16 +154,16 @@ def train(args, model):
         score_epoch.append(score['Mean IoU : \t'])
         board.score(score_epoch)
 
-        if score['Mean IoU : \t'] >= best_iou:
+        if score['Mean IoU : \t'] >= best_iou or epoch % 30 == 0:
             best_iou = score['Mean IoU : \t']
             state = {'epoch': epoch,
                      'model_state': model.state_dict(),
                      'optimizer_state' : optimizer.state_dict(),}
             filename = os.path.join(args.savedir, f'{args.model}-{epoch:03}.pth')
             torch.save(state, filename)
-            tqdm.write(f'save: {filename} (epoch: {epoch}), best_iou: {best_iou}')
+            tqdm.write(f'save: {filename} (epoch: {epoch})')
 
-        scheduler.step(score['Mean IoU : \t'])
+        scheduler.step(best_iou)
 
 def evaluate(args, model):
     model.eval()
